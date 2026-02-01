@@ -104,6 +104,7 @@ model Kit {
   industry String
   products String[]
   services String[]
+  style String
   tone String
   targetAudience String
   features String
@@ -126,13 +127,12 @@ model GeneratedContent {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   brandIdentity String
   businessDescription String
-  logoIdeas String[]
-  posts String[]
-  captions String[]
-  hashtags String[]
-  adIdeas String[]
-  whatsappMessages String[]
-  personas String[]
+  logoIdeas Json
+  posts Json
+  hashtags Json
+  adIdeas Json
+  whatsappMessages Json
+  personas Json
   socialMediaStrategy String
 
   createdAt DateTime @default(now())

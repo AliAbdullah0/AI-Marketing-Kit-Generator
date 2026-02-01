@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Kit" ALTER COLUMN "industry" SET NOT NULL,
+ALTER COLUMN "industry" SET DATA TYPE TEXT;
