@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  member        Boolean @default(false)
+  marketingKits MarketingKit[]
+  kits Kit[]
+  generatedContents GeneratedContent[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model MarketingKit {
+  id String @id @default(cuid())
+  name String
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  kits Kit?
+
+  @@index([userId])
+}
+
+model Kit {
+  id String @id @default(cuid())
+  marketingKitId String @unique
+  marketingKit MarketingKit @relation(fields: [marketingKitId], references: [id], onDelete: Cascade)
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessName String
+  industry String
+  products String[]
+  services String[]
+  tone String
+  targetAudience String
+  features String
+  benefits String
+  region String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  generatedContents GeneratedContent?
+
+  @@index([userId])
+  @@index([marketingKitId])
+}
+
+model GeneratedContent {
+  id String @id @default(cuid())
+  kitId String @unique
+  kit Kit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandIdentity String
+  businessDescription String
+  logoIdeas String[]
+  posts String[]
+  captions String[]
+  hashtags String[]
+  adIdeas String[]
+  whatsappMessages String[]
+  personas String[]
+  socialMediaStrategy String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([kitId])
+  @@index([userId])
+}
+
