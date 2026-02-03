@@ -1,7 +1,10 @@
 "use server";
-import { generateObject } from 'ai';
+
+import { generateObject, generateText } from "ai";
 import { mistral } from "@ai-sdk/mistral";
-import { z } from 'zod';
+import { z } from "zod";
+
+/* -------------------- TYPES -------------------- */
 
 interface AdData {
   industry: string;
@@ -14,72 +17,105 @@ interface AdData {
 }
 
 interface Ad {
+  platform: "Instagram" | "Twitter" | "Facebook" | "LinkedIn" | "TikTok";
   script: string;
   hooks: string[];
-  platform: string;
 }
+
+/* -------------------- ZOD SCHEMA -------------------- */
+
+// ENUM forces exact platform matching (CRITICAL)
+const PlatformEnum = z.enum([
+  "Instagram",
+  "Twitter",
+  "Facebook",
+  "LinkedIn",
+  "TikTok",
+]);
+
+const AdSchema = z.object({
+  platform: PlatformEnum,
+  script: z.string().min(10),
+  hooks: z.array(z.string()).min(1),
+});
+
+const AdsSchema = z.array(AdSchema);
+
+/* -------------------- SERVER ACTION -------------------- */
 
 export const generateAdIdeas = async (
   data: AdData,
   tone: string,
   style: string
 ) => {
-  const { industry, products, services, features, targetAudience, benefits, region } = data;
+  const {
+    industry,
+    products,
+    services,
+    features,
+    targetAudience,
+    benefits,
+    region,
+  } = data;
 
   if (!industry || !tone || !style) {
     throw new Error("Invalid parameters: industry, tone, and style are required.");
   }
 
-  const platforms = ["Instagram", "Twitter", "Facebook", "LinkedIn", "TikTok"];
-
   try {
     const result = await generateObject({
-      model: mistral('mistral-large-latest'),
-      schema: z.object({
-        ads: z.array(
-          z.object({
-            platform: z.string(),
-            script: z.string(),
-            hooks: z.array(z.string()),
-          })
-        )
-      }),
+      model: mistral("mistral-large-latest"),
+      schema: AdsSchema,
       prompt: `
-Generate ${platforms.length} ad ideas for social media posts about a business in the ${industry} industry.
+Generate EXACTLY 5 ad ideas.
+
+Platforms (each must appear ONCE):
+Instagram, Twitter, Facebook, LinkedIn, TikTok
+
+Business details:
+Industry: ${industry}
 Products: ${products.join(", ")}
 Services: ${services.join(", ")}
 Features: ${features}
 Benefits: ${benefits}
-Target audience: ${targetAudience}
+Target Audience: ${targetAudience}
 Region: ${region}
 
 Tone: ${tone}
 Style: ${style}
 
-Distribute one ad per platform from: ${platforms.join(", ")}. Each ad should include:
-- Platform
-- Script: full ad copy or video/audio script
-- Hooks: catchy lines or attention-grabbing phrases
-Make the ads engaging, creative, and suitable for the respective platform.
-      `,
+Rules:
+- Each ad MUST include:
+  - platform (exactly one of the platforms above)
+  - script (string, full ad copy)
+  - hooks (array of short catchy strings)
+- Hooks MUST be an array of strings
+- No extra fields
+
+IMPORTANT:
+Return ONLY valid JSON.
+No markdown.
+No explanations.
+`,
     });
 
-    // Always normalize to a fixed JSON shape
-    const adIdeasPayload = {
-      ads: Array.isArray(result.object?.ads) ? result.object.ads : [],
-    };
+    // SAFETY CHECK (optional but recommended)
+    if (!result.object || result.object.length === 0) {
+      throw new Error("Structured output validation failed");
+    }
 
     return {
       status: 201,
       message: "Ad ideas generated successfully",
-      adIdeas: adIdeasPayload, // <- Prisma-safe shape
+      adIdeas: result.object as Ad[],
     };
   } catch (error) {
     console.error("Error generating ad ideas:", error);
+
     return {
       status: 500,
       message: "Error occurred while generating ad ideas!",
-      adIdeas: { ads: [] }, // <- still Prisma-safe
+      adIdeas: [] as Ad[],
     };
   }
 };
