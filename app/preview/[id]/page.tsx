@@ -7,16 +7,16 @@ type Params = {
 }
 
 const PreviewPage = async ({params}:{params:Params}) => {
-  const { id } = params;
-  const { kit } = await getGeneratedKit(id);
-  // console.log(kit)
-  const ad = kit?.adIdeas;
+  const { id } = await params;
+  const res = await getGeneratedKit(id);
+  console.log(res)
+  // const ad = kit?.adIdeas;
   // kit?.brandIdentity  
-  console.log(kit?.brandIdentity)
+  // console.log(kit?.brandIdentity)
   
   return (
     <>
-    <div className='flex h-screen p-4'>
+    {/* <div className='flex h-screen p-4'>
       <div className='flex px-4 py-3 flex-col gap-2'>
         <h2 className='text-4xl font-bold'>Preview</h2>
         <Separator className='w-full' />
@@ -38,7 +38,7 @@ const PreviewPage = async ({params}:{params:Params}) => {
         </div>
         </div>
         
-    </div>
+    </div> */}
     </>
   )
 }

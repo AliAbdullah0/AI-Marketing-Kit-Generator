@@ -85,7 +85,7 @@ export const processAIGeneration = async (kitId:string)=>{
                 posts:posts.posts!,
                 logoIdeas:logos.logos!,
                 hashtags:hashtags.hashtags!,
-                adIdeas:ads.adIdeas.ads!,
+                adIdeas:ads.adIdeas!,
             }
         })
         console.log(res)

@@ -107,7 +107,7 @@ No explanations.
     return {
       status: 201,
       message: "Ad ideas generated successfully",
-      adIdeas: result.object as Ad[],
+      adIdeas: result.object,
     };
   } catch (error) {
     console.error("Error generating ad ideas:", error);
